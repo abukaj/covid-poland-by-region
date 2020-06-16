@@ -28,7 +28,7 @@ def draw(df: pandas.DataFrame):
     x_range = [i for i in range(df.date.size)]
 
     ax.xaxis.set_major_formatter(plt.FuncFormatter('{:.0f}'.format))
-    ax.yaxis.set_major_formatter(plt.FuncFormatter('{:.0f}'.format))
+    ax.yaxis.set_major_formatter(plt.FuncFormatter('{:.3g}'.format))
 
     plt.grid(True, 'major', 'y', ls='--', lw=.5, c='k', alpha=.3)
 
@@ -49,7 +49,45 @@ def draw(df: pandas.DataFrame):
     plt.show()
 
 
+POPULATION = {
+              'dolnośląskie': 2_901_225,
+              'kujawsko-pomorskie': 2_077_775,
+              'lubelskie': 2_117_619,
+              'lubuskie': 1_014_548,
+              'łódzkie': 2_466_322,
+              'małopolskie': 3_400_577,
+              'mazowieckie': 5_403_412,
+              'opolskie': 986_506,
+              'podkarpackie': 2_129_015,
+              'podlaskie': 1_181_533,
+              'pomorskie': 2_333_523,
+              'śląskie': 4_533_565,
+              'świętokrzyskie': 1_241_546,
+              'warmińsko-mazurskie': 1_428_983,
+              'wielkopolskie': 3_493_969,
+              'zachodniopomorskie': 1_701_030,
+              }
+# Population for 1 Jan 2019
+# Data from: https://pl.wikipedia.org/wiki/Ludno%C5%9B%C4%87_Polski#Ludno%C5%9B%C4%87_wed%C5%82ug_wojew%C3%B3dztw
+
+
+def normalize(df):
+    df2 = df.copy()
+    for name, population in POPULATION.items():
+        df2[name] = df[name] * 1e5 / population
+
+    return df2
+
+
 if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Plot CoViD-19 trajectories of polish voivodenships.')
+    parser.add_argument('--normalize', dest='normalize', action='store_const',
+                        const=normalize, default=lambda x: x,
+                        help='normalize data by population size [100 000]')
+    args = parser.parse_args()
+
     covid = CovidStats()
     df = covid.get_data()
-    draw(df)
+    draw(args.normalize(df))
